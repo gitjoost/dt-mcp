@@ -38,3 +38,6 @@ DerivedData/
 
 # Claude Code settings
 .claude/
+
+# Distribution binaries
+dist/
