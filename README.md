@@ -86,11 +86,13 @@ An MCP (Model Context Protocol) server for [DEVONthink](https://www.devontechnol
 
   > "Get the API specification document from DEVONthink and save it as docs/api-spec.md in my current project."
 
-  **Daily digest**
+  **Patent prior art search**
 
-  Generate a summary from multiple sources.
+  When an engineer has a new idea, check it against your patent database for potential conflicts.
 
-  > "List my flagged items in DEVONthink and any TODO comments in my current codebase. Create a markdown summary of what needs attention."  
+  > "I have an idea for a 'wireless charging system that uses resonant inductive coupling with automatic frequency tuning to optimize power transfer based on device distance.' Search my 'patents & ip' database for similar patents and tell me if this concept appears to already be covered."
+
+  The AI will search your patent database, use DEVONthink's "see also" to find conceptually similar documents, analyze matching patents, and flag potential prior art.
 
 ## Features
 
