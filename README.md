@@ -129,7 +129,7 @@ Requires Xcode Command Line Tools or Xcode with Swift 5.9+.
 
 ```bash
 # Clone the repository
-git clone https://github.com/intellecy/dt-mcp.git
+git clone https://github.com/gitjoost/dt-mcp.git
 cd dt-mcp
 
 # Build release binary
