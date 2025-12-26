@@ -1,6 +1,14 @@
 # dt-mcp
 
-An MCP (Model Context Protocol) server for [DEVONthink](https://www.devontechnologies.com/apps/devonthink), enabling AI assistants like Claude to interact with your DEVONthink databases. The most excellent DEVONthink application version 4 does have a 'chat' feature that permits one to interact with an LLM, so why an MCP then?  Quick overview:
+An MCP (Model Context Protocol) server for [DEVONthink](https://www.devontechnologies.com/apps/devonthink), enabling AI assistants like Claude to interact with your DEVONthink databases. The most excellent DEVONthink application version 4 does have a 'chat' feature that permits one to interact with an LLM, so why an MCP then?  See below but first an important aspect of this MCP server vs DEVONthink's chat feature.
+
+
+
+Having an LLM/AI work with your documents really means that these are send to the LLM in use. I.e., your data, potentially private, goes off-site to some server somewhere. You may not want that. DEVONthink's chat does NOT send any original document to the LLM you use. Meta data is stripped from the document also and images are mangled. That is an enormous benefit of DEVONthink's chat. This MCP server software presented here does no such sophisciated operation, all your docs you use in the LLM interaction are shared off-site. 
+
+ 
+
+ Quick overview:
 
 ## dt-mcp vs DEVONthink Built-in Chat
 
