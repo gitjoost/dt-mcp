@@ -1,14 +1,45 @@
 # dt-mcp
 
-An MCP (Model Context Protocol) server for [DEVONthink](https://www.devontechnologies.com/apps/devonthink), enabling AI assistants like Claude to interact with your DEVONthink databases. The most excellent DEVONthink application version 4 does have a 'chat' feature that permits one to interact with an LLM, so why an MCP then?  See below but first an important aspect of this MCP server vs DEVONthink's chat feature.
+An MCP (Model Context Protocol) server for [DEVONthink](https://www.devontechnologies.com/apps/devonthink), enabling AI assistants like Claude to interact with your DEVONthink databases. The most excellent DEVONthink application version 4 does have a 'chat' feature that permits one to interact with an LLM, so why an MCP then? See below but first an important aspect of this MCP server vs DEVONthink's chat feature.
 
+## Privacy
 
+Having an LLM/AI work with your documents means these are sent to the LLM provider's servers. Your data, potentially private, goes off-site. You may not want that.
 
-Having an LLM/AI work with your documents really means that these are send to the LLM in use. I.e., your data, potentially private, goes off-site to some server somewhere. You may not want that. DEVONthink's chat does NOT send any original document to the LLM you use. Meta data is stripped from the document also and images are mangled. That is an enormous benefit of DEVONthink's chat. This MCP server software presented here does no such sophisciated operation, all your docs you use in the LLM interaction are shared off-site. 
+DEVONthink's built-in chat does NOT send original documents to the LLM—metadata is stripped and images are processed. That's an enormous privacy benefit.
 
- 
+**This MCP server now offers similar protection via the `PRIVATE` tag:**
 
- Quick overview:
+| Document Type | What Gets Sent to LLM |
+|---------------|----------------------|
+| Regular documents | Full content as-is |
+| `PRIVATE`-tagged documents | Anonymized content with PII tokenized |
+
+### How PRIVATE Tag Works
+
+Tag any document with `PRIVATE` (case-insensitive) in DEVONthink, and when accessed via this MCP:
+
+1. **PII is tokenized** - sensitive data is replaced with HMAC-encoded tokens:
+   - Emails → `[EM:xxxxxxxx]`
+   - Phone numbers → `[PH:xxxxxxxx]`
+   - Credit cards → `[CC:xxxxxxxx]`
+   - SSN → `[SS:xxxxxxxx]`
+   - Account numbers/IDs → `[NN:xxxxxxxx]`
+
+2. **Metadata is stripped** - author, dates, paths, URLs, comments are removed
+
+3. **Tokens are correlatable** - the LLM can still understand "these 3 emails are from the same person" without seeing the actual address
+
+4. **Tokens are decodable** - original values are stored locally in `~/.config/dt-mcp/token_cache.json` for later retrieval
+
+**What stays local:**
+- Actual email addresses, phone numbers, SSNs, credit cards
+- DEVONthink searches (run locally with real values)
+- Token-to-original mappings
+
+**What goes to LLM:**
+- Tokenized content (meaningless without local key)
+- Document names and non-PII text
 
 ## dt-mcp vs DEVONthink Built-in Chat
 

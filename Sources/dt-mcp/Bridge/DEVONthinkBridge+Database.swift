@@ -54,7 +54,16 @@ extension DEVONthinkBridge {
         set counter to 0
         repeat with theRecord in theRecords
           if counter >= 50 then exit repeat
-          set end of resultList to {uuid of theRecord, name of theRecord, path of theRecord, location of theRecord}
+          set theTags to tags of theRecord
+          set tagStr to ""
+          repeat with t in theTags
+            if tagStr is "" then
+              set tagStr to t as string
+            else
+              set tagStr to tagStr & "||" & (t as string)
+            end if
+          end repeat
+          set end of resultList to {uuid of theRecord, name of theRecord, path of theRecord, location of theRecord, tagStr}
           set counter to counter + 1
         end repeat
         return resultList
@@ -69,7 +78,16 @@ extension DEVONthinkBridge {
         set counter to 0
         repeat with theRecord in theRecords
           if counter >= 50 then exit repeat
-          set end of resultList to {uuid of theRecord, name of theRecord, path of theRecord, location of theRecord}
+          set theTags to tags of theRecord
+          set tagStr to ""
+          repeat with t in theTags
+            if tagStr is "" then
+              set tagStr to t as string
+            else
+              set tagStr to tagStr & "||" & (t as string)
+            end if
+          end repeat
+          set end of resultList to {uuid of theRecord, name of theRecord, path of theRecord, location of theRecord, tagStr}
           set counter to counter + 1
         end repeat
         return resultList
@@ -78,7 +96,26 @@ extension DEVONthinkBridge {
     }
 
     let result = try runAppleScript(script)
-    return parseRecordList(result, keys: ["uuid", "name", "path", "location"])
+    return parseSearchResults(result)
+  }
+
+  private func parseSearchResults(_ descriptor: NSAppleEventDescriptor) -> [[String: Any]] {
+    var result: [[String: Any]] = []
+    let count = descriptor.numberOfItems
+    guard count > 0 else { return result }
+    for i in 1...count {
+      guard let item = descriptor.atIndex(i) else { continue }
+      let tagStr = item.atIndex(5)?.stringValue ?? ""
+      let tags = tagStr.isEmpty ? [] : tagStr.components(separatedBy: "||")
+      result.append([
+        "uuid": item.atIndex(1)?.stringValue ?? "",
+        "name": item.atIndex(2)?.stringValue ?? "",
+        "path": item.atIndex(3)?.stringValue ?? "",
+        "location": item.atIndex(4)?.stringValue ?? "",
+        "tags": tags
+      ])
+    }
+    return result
   }
 
   func getDatabase(uuid: String) throws -> [String: Any] {
@@ -155,14 +192,23 @@ extension DEVONthinkBridge {
     tell application id "DNtp"
       set resultList to {}
       repeat with theRecord in (selected records)
-        set end of resultList to {uuid of theRecord, name of theRecord, path of theRecord, location of theRecord}
+        set theTags to tags of theRecord
+        set tagStr to ""
+        repeat with t in theTags
+          if tagStr is "" then
+            set tagStr to t as string
+          else
+            set tagStr to tagStr & "||" & (t as string)
+          end if
+        end repeat
+        set end of resultList to {uuid of theRecord, name of theRecord, path of theRecord, location of theRecord, tagStr}
       end repeat
       return resultList
     end tell
     """
 
     let result = try runAppleScript(script)
-    return parseRecordList(result, keys: ["uuid", "name", "path", "location"])
+    return parseSearchResults(result)
   }
 
   func getThinkWindows() throws -> [[String: Any]] {

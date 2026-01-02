@@ -128,4 +128,26 @@ class DEVONthinkBridge {
     }
     return result
   }
+
+  // MARK: - Privacy Helpers
+
+  func getRecordTags(uuid: String) throws -> [String] {
+    let script = """
+    tell application id "DNtp"
+      set theRecord to get record with uuid "\(escape(uuid))"
+      if theRecord is missing value then error "Record not found"
+      return tags of theRecord
+    end tell
+    """
+    let result = try runAppleScript(script)
+    var tags: [String] = []
+    let count = result.numberOfItems
+    guard count > 0 else { return tags }
+    for i in 1...count {
+      if let tag = result.atIndex(i)?.stringValue {
+        tags.append(tag)
+      }
+    }
+    return tags
+  }
 }

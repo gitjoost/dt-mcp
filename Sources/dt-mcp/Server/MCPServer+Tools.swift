@@ -702,13 +702,24 @@ extension MCPServer {
       }
       let dbUUID = arguments["database"] as? String
       let records = try devonthink.search(query: query, inDatabase: dbUUID)
-      return formatToolResult(records)
+      let privatizer = Privatizer.shared
+      let processedRecords = records.map { record -> [String: Any] in
+        if privatizer.isPrivate(record) {
+          return privatizer.privatizeRecord(record)
+        }
+        return record
+      }
+      return formatToolResult(processedRecords)
 
     case "get_record":
       guard let uuid = arguments["uuid"] as? String else {
         throw MCPError.missingArgument("uuid")
       }
-      let record = try devonthink.getRecord(uuid: uuid)
+      var record = try devonthink.getRecord(uuid: uuid)
+      let privatizer = Privatizer.shared
+      if privatizer.isPrivate(record) {
+        record = privatizer.privatizeRecord(record)
+      }
       return formatToolResult(record)
 
     case "get_record_content":
@@ -716,7 +727,12 @@ extension MCPServer {
         throw MCPError.missingArgument("uuid")
       }
       let format = arguments["format"] as? String ?? "plain"
-      let content = try devonthink.getRecordContent(uuid: uuid, format: format)
+      var content = try devonthink.getRecordContent(uuid: uuid, format: format)
+      let tags = try devonthink.getRecordTags(uuid: uuid)
+      let privatizer = Privatizer.shared
+      if privatizer.isPrivate(tags) {
+        content = privatizer.privatize(content)
+      }
       return formatToolResult(["content": content])
 
     case "create_record":
@@ -733,7 +749,14 @@ extension MCPServer {
 
     case "get_selection":
       let records = try devonthink.getSelectedRecords()
-      return formatToolResult(records)
+      let privatizer = Privatizer.shared
+      let processedRecords = records.map { record -> [String: Any] in
+        if privatizer.isPrivate(record) {
+          return privatizer.privatizeRecord(record)
+        }
+        return record
+      }
+      return formatToolResult(processedRecords)
 
     // Database operations
     case "get_database":
