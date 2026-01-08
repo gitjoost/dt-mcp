@@ -193,6 +193,23 @@ class Privatizer {
     return result
   }
 
+  // MARK: - Strip Metadata (Privacy Mode)
+
+  func stripMetadata(_ record: [String: Any]) -> [String: Any] {
+    var result = record
+
+    // Strip sensitive metadata, keep: name, tags, uuid
+    result.removeValue(forKey: "path")
+    result.removeValue(forKey: "creationDate")
+    result.removeValue(forKey: "modificationDate")
+    result.removeValue(forKey: "comment")
+    result.removeValue(forKey: "url")
+    result.removeValue(forKey: "author")
+    result.removeValue(forKey: "customMetadata")
+
+    return result
+  }
+
   // MARK: - Privatize Record Metadata
 
   func privatizeRecord(_ record: [String: Any]) -> [String: Any] {

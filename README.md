@@ -2,7 +2,7 @@
 
 An MCP (Model Context Protocol) server for [DEVONthink](https://www.devontechnologies.com/apps/devonthink), enabling AI assistants like Claude to interact with your DEVONthink databases.
 
-V0.4.0
+V0.5.0
 
 ## Features
 

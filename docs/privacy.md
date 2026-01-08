@@ -83,3 +83,37 @@ These tools allow working with privacy tokens:
 ```
 
 **Note:** You cannot search DEVONthink for tokens. DEVONthink indexes original content, not tokenized content. Tokenization only happens when content is read and sent to the LLM.
+
+## Privacy Mode
+
+A global toggle that strips metadata from ALL documents (not just PRIVATE-tagged).
+
+### Enable/Disable
+
+```
+set_privacy_mode(enabled: true)   # Enable
+set_privacy_mode(enabled: false)  # Disable
+get_privacy_mode()                # Check status
+```
+
+### What Gets Stripped
+
+| Stripped | Kept |
+|----------|------|
+| author | name |
+| path | uuid |
+| URL | tags |
+| comment | content |
+| dates (creation, modification) | |
+| custom metadata | |
+
+### Privacy Mode vs PRIVATE Tag
+
+| Feature | Privacy Mode | PRIVATE Tag |
+|---------|--------------|-------------|
+| Scope | All documents | Tagged documents only |
+| Metadata | Stripped | Stripped |
+| Content | Unchanged | Tokenized (PII replaced) |
+| Write protection | No | Yes |
+
+Use **Privacy Mode** for general metadata reduction. Use **PRIVATE tag** for sensitive documents requiring PII tokenization and write protection.
