@@ -117,3 +117,5 @@ get_privacy_mode()                # Check status
 | Write protection | No | Yes |
 
 Use **Privacy Mode** for general metadata reduction. Use **PRIVATE tag** for sensitive documents requiring PII tokenization and write protection.
+
+**Note:** Privacy Mode only strips metadata. Content of non-PRIVATE documents (including any PII like emails, phone numbers, SSN) is sent unchanged to the LLM.

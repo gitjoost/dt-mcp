@@ -710,7 +710,7 @@ extension MCPServer {
       ),
       Tool(
         name: "set_privacy_mode",
-        description: "Enable or disable privacy mode. When enabled, metadata (author, path, dates, comments, URL) is stripped from ALL documents.",
+        description: "Enable or disable privacy mode. When enabled, metadata (author, path, dates, comments, URL) is stripped from ALL documents. Note that content of non-PRIVATE documents remains unencoded.",
         inputSchema: [
           "type": AnyCodable("object"),
           "properties": AnyCodable([
