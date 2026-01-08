@@ -52,3 +52,34 @@ Located in `~/.config/dt-mcp/`:
 
 - Tokenized content (meaningless without local key)
 - Document names and non-PII text
+
+## Token Tools
+
+These tools allow working with privacy tokens:
+
+| Tool | Purpose |
+|------|---------|
+| `encode_value` | Encode a PII value to get its token. Use to search PRIVATE docs for known values. |
+| `decode_token` | Decode a single token back to original value |
+| `decode_tokens` | Batch decode multiple tokens |
+| `clear_token_cache` | Clear all cached token mappings |
+
+### encode_value Types
+
+| Type | Token Format | Example |
+|------|-------------|---------|
+| `email` | `[EM:xxxx]` | john@example.com → `[EM:a1b2c3d4]` |
+| `phone` | `[PH:xxxx]` | +1-555-123-4567 → `[PH:e5f6g7h8]` |
+| `ssn` | `[SS:xxxx]` | 123-45-6789 → `[SS:i9j0k1l2]` |
+| `card` | `[CC:xxxx]` | 4111-1111-1111-1111 → `[CC:m3n4o5p6]` |
+| `number` | `[NN:xxxx]` | 987654321 → `[NN:q7r8s9t0]` |
+
+### Example: Verify a token matches a known value
+
+```
+1. You see [SS:a1b2c3d4] in a PRIVATE document
+2. encode_value("123-45-6789", type: "ssn") → [SS:a1b2c3d4]
+3. Tokens match → confirms the SSN in the document is 123-45-6789
+```
+
+**Note:** You cannot search DEVONthink for tokens. DEVONthink indexes original content, not tokenized content. Tokenization only happens when content is read and sent to the LLM.

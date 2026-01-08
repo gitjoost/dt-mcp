@@ -236,6 +236,25 @@ class Privatizer {
       throw MCPError.writeProtected(uuid)
     }
   }
+
+  // MARK: - Encode Value by Type
+
+  func encodeValue(_ value: String, type: String) -> String {
+    switch type.lowercased() {
+    case "email":
+      return encodeEmail(value)
+    case "phone":
+      return encodePhone(value)
+    case "ssn":
+      return encodeToken(value, prefix: "SS")
+    case "card":
+      return encodeToken(value, prefix: "CC")
+    case "number":
+      return encodeToken(value, prefix: "NN")
+    default:
+      return encodeToken(value, prefix: "NN")
+    }
+  }
 }
 
 // MARK: - Token Cache

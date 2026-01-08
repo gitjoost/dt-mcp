@@ -657,6 +657,50 @@ extension MCPServer {
           ] as [String: Any]),
           "required": AnyCodable(["uuid"])
         ]
+      ),
+      // Privacy Token Tools
+      Tool(
+        name: "decode_token",
+        description: "Decode a privacy token back to its original value. Tokens are generated when reading PRIVATE-tagged documents.",
+        inputSchema: [
+          "type": AnyCodable("object"),
+          "properties": AnyCodable([
+            "token": ["type": "string", "description": "Token to decode (e.g., [EM:abc123])"] as [String: Any]
+          ] as [String: Any]),
+          "required": AnyCodable(["token"])
+        ]
+      ),
+      Tool(
+        name: "decode_tokens",
+        description: "Decode multiple privacy tokens at once. Returns mapping of tokens to original values.",
+        inputSchema: [
+          "type": AnyCodable("object"),
+          "properties": AnyCodable([
+            "tokens": ["type": "array", "items": ["type": "string"] as [String: Any], "description": "Array of tokens to decode"] as [String: Any]
+          ] as [String: Any]),
+          "required": AnyCodable(["tokens"])
+        ]
+      ),
+      Tool(
+        name: "encode_value",
+        description: "Encode a value to get its privacy token. Use this to search PRIVATE-tagged documents for known PII values.",
+        inputSchema: [
+          "type": AnyCodable("object"),
+          "properties": AnyCodable([
+            "value": ["type": "string", "description": "Value to encode (email, phone, SSN, etc.)"] as [String: Any],
+            "type": ["type": "string", "description": "Value type: email, phone, ssn, card, number"] as [String: Any]
+          ] as [String: Any]),
+          "required": AnyCodable(["value", "type"])
+        ]
+      ),
+      Tool(
+        name: "clear_token_cache",
+        description: "Clear the privacy token cache. Use for maintenance or to start fresh.",
+        inputSchema: [
+          "type": AnyCodable("object"),
+          "properties": AnyCodable([:] as [String: Any]),
+          "required": AnyCodable([] as [String])
+        ]
       )
     ]
   }
@@ -1147,6 +1191,37 @@ extension MCPServer {
       }
       let duplicates = try devonthink.getDuplicates(uuid: uuid)
       return formatToolResult(duplicates)
+
+    // Privacy Token Tools
+    case "decode_token":
+      guard let token = arguments["token"] as? String else {
+        throw MCPError.missingArgument("token")
+      }
+      if let original = TokenCache.shared.decode(token) {
+        return formatToolResult(["token": token, "value": original])
+      }
+      else {
+        return formatToolResult(["token": token, "value": NSNull(), "message": "Token not found in cache"])
+      }
+
+    case "decode_tokens":
+      guard let tokens = arguments["tokens"] as? [String] else {
+        throw MCPError.missingArgument("tokens")
+      }
+      let decoded = TokenCache.shared.decodeAll(tokens)
+      return formatToolResult(decoded)
+
+    case "encode_value":
+      guard let value = arguments["value"] as? String,
+            let type = arguments["type"] as? String else {
+        throw MCPError.missingArgument("value or type")
+      }
+      let token = Privatizer.shared.encodeValue(value, type: type)
+      return formatToolResult(["value": value, "type": type, "token": token])
+
+    case "clear_token_cache":
+      let count = TokenCache.shared.clear()
+      return formatToolResult(["cleared": count, "message": "Token cache cleared"])
 
     default:
       throw MCPError.unknownTool(name)
