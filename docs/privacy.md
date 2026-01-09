@@ -119,3 +119,48 @@ get_privacy_mode()                # Check status
 Use **Privacy Mode** for general metadata reduction. Use **PRIVATE tag** for sensitive documents requiring PII tokenization and write protection.
 
 **Note:** Privacy Mode only strips metadata. Content of non-PRIVATE documents (including any PII like emails, phone numbers, SSN) is sent unchanged to the LLM.
+
+## Database Exclusion
+
+Hide entire databases from MCP completely. Excluded databases are invisible to the AI.
+
+### Tools
+
+| Tool | Purpose |
+|------|---------|
+| `exclude_database` | Add database UUID to exclusion list |
+| `include_database` | Remove database UUID from exclusion list |
+| `list_excluded_databases` | Show currently excluded database UUIDs |
+
+### What Happens
+
+When a database is excluded:
+
+- **Hidden from list_databases** - the database doesn't appear in the list
+- **Search results filtered** - records from excluded databases are not returned
+- **Direct access blocked** - any operation on records in excluded databases returns an error
+- **Creates records blocked** - cannot import, create, or download to excluded databases
+
+### Example
+
+```
+# Exclude a database
+exclude_database(uuid: "ABC123...")
+
+# The AI can no longer:
+# - See the database in list_databases
+# - Find any records from that database in search results
+# - Access any record from that database directly
+# - Create new records in that database
+
+# Re-include the database
+include_database(uuid: "ABC123...")
+```
+
+### Configuration
+
+Excluded databases are stored in `~/.config/dt-mcp/config.json` under `excluded_databases` (array of UUIDs).
+
+### Use Case
+
+"Some databases the AI should never see at all" - financial records, medical data, legal documents, etc.
