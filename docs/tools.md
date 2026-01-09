@@ -101,3 +101,11 @@
 | `get_annotations` | Get record annotations |
 | `get_replicants` | Get record parent locations |
 | `get_duplicates` | Find duplicate records |
+
+## Content Extraction Notes
+
+When retrieving record content via `get_record_content`:
+
+- **PDFs**: Only the extracted text is sent, not the raw PDF file. This keeps responses lightweight and avoids transmitting large binary files.
+- **Embedded images**: Images embedded within PDFs are not extracted or sent. This means image content within PDFs is not searchable or accessible via MCP.
+- **Other formats**: Text-based formats (Markdown, RTF, plain text) are sent as-is.
