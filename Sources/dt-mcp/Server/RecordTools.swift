@@ -43,10 +43,19 @@ extension MCPServer {
         throw MCPError.missingArgument("query")
       }
       let dbUUID = arguments["database"] as? String
+      // If searching specific database, check if it's excluded
+      if let dbUUID = dbUUID, ConfigManager.shared.isExcluded(dbUUID) {
+        throw MCPError.databaseExcluded(dbUUID)
+      }
       let records = try devonthink.search(query: query, inDatabase: dbUUID)
+      let excluded = ConfigManager.shared.excludedDatabases
       let privatizer = Privatizer.shared
       let privacyMode = ConfigManager.shared.privacyMode
-      let processedRecords = records.map { record -> [String: Any] in
+      let processedRecords = records.compactMap { record -> [String: Any]? in
+        // Filter out records from excluded databases
+        if let recordDbUUID = record["databaseUUID"] as? String, excluded.contains(recordDbUUID) {
+          return nil
+        }
         if privatizer.isPrivate(record) {
           return privatizer.privatizeRecord(record)
         }
@@ -60,6 +69,11 @@ extension MCPServer {
     case "get_record":
       guard let uuid = arguments["uuid"] as? String else {
         throw MCPError.missingArgument("uuid")
+      }
+      // Check if record is in excluded database
+      let dbUUID = try devonthink.getRecordDatabaseUUID(uuid: uuid)
+      if ConfigManager.shared.isExcluded(dbUUID) {
+        throw MCPError.databaseExcluded(dbUUID)
       }
       var record = try devonthink.getRecord(uuid: uuid)
       let privatizer = Privatizer.shared
@@ -75,6 +89,11 @@ extension MCPServer {
       guard let uuid = arguments["uuid"] as? String else {
         throw MCPError.missingArgument("uuid")
       }
+      // Check if record is in excluded database
+      let contentDbUUID = try devonthink.getRecordDatabaseUUID(uuid: uuid)
+      if ConfigManager.shared.isExcluded(contentDbUUID) {
+        throw MCPError.databaseExcluded(contentDbUUID)
+      }
       let format = arguments["format"] as? String ?? "plain"
       var content = try devonthink.getRecordContent(uuid: uuid, format: format)
       let tags = try devonthink.getRecordTags(uuid: uuid)
@@ -89,6 +108,10 @@ extension MCPServer {
             let database = arguments["database"] as? String else {
         throw MCPError.missingArgument("name or database")
       }
+      // Check if target database is excluded
+      if ConfigManager.shared.isExcluded(database) {
+        throw MCPError.databaseExcluded(database)
+      }
       let type = arguments["type"] as? String ?? "markdown"
       let content = arguments["content"] as? String
       let destination = arguments["destination"] as? String
@@ -100,7 +123,14 @@ extension MCPServer {
       let records = try devonthink.getSelectedRecords()
       let privatizer = Privatizer.shared
       let privacyMode = ConfigManager.shared.privacyMode
-      let processedRecords = records.map { record -> [String: Any] in
+      let processedRecords = records.compactMap { record -> [String: Any]? in
+        // Filter out records from excluded databases
+        if let uuid = record["uuid"] as? String {
+          if let dbUUID = try? devonthink.getRecordDatabaseUUID(uuid: uuid),
+             ConfigManager.shared.isExcluded(dbUUID) {
+            return nil
+          }
+        }
         if privatizer.isPrivate(record) {
           return privatizer.privatizeRecord(record)
         }
@@ -114,6 +144,11 @@ extension MCPServer {
     case "update_record":
       guard let uuid = arguments["uuid"] as? String else {
         throw MCPError.missingArgument("uuid")
+      }
+      // Check if record is in excluded database
+      let updateDbUUID = try devonthink.getRecordDatabaseUUID(uuid: uuid)
+      if ConfigManager.shared.isExcluded(updateDbUUID) {
+        throw MCPError.databaseExcluded(updateDbUUID)
       }
       let tags = try devonthink.getRecordTags(uuid: uuid)
       try Privatizer.shared.checkWritePermission(uuid: uuid, tags: tags)
@@ -133,6 +168,10 @@ extension MCPServer {
       guard let uuid = arguments["uuid"] as? String else {
         throw MCPError.missingArgument("uuid")
       }
+      let deleteDbUUID = try devonthink.getRecordDatabaseUUID(uuid: uuid)
+      if ConfigManager.shared.isExcluded(deleteDbUUID) {
+        throw MCPError.databaseExcluded(deleteDbUUID)
+      }
       let tags = try devonthink.getRecordTags(uuid: uuid)
       try Privatizer.shared.checkWritePermission(uuid: uuid, tags: tags)
       let success = try devonthink.deleteRecord(uuid: uuid)
@@ -143,6 +182,10 @@ extension MCPServer {
             let to = arguments["to"] as? String else {
         throw MCPError.missingArgument("uuid or to")
       }
+      let moveDbUUID = try devonthink.getRecordDatabaseUUID(uuid: uuid)
+      if ConfigManager.shared.isExcluded(moveDbUUID) {
+        throw MCPError.databaseExcluded(moveDbUUID)
+      }
       let tags = try devonthink.getRecordTags(uuid: uuid)
       try Privatizer.shared.checkWritePermission(uuid: uuid, tags: tags)
       let record = try devonthink.moveRecord(uuid: uuid, to: to)
@@ -151,6 +194,10 @@ extension MCPServer {
     case "duplicate_record":
       guard let uuid = arguments["uuid"] as? String else {
         throw MCPError.missingArgument("uuid")
+      }
+      let dupDbUUID = try devonthink.getRecordDatabaseUUID(uuid: uuid)
+      if ConfigManager.shared.isExcluded(dupDbUUID) {
+        throw MCPError.databaseExcluded(dupDbUUID)
       }
       let tags = try devonthink.getRecordTags(uuid: uuid)
       try Privatizer.shared.checkWritePermission(uuid: uuid, tags: tags)
@@ -163,6 +210,10 @@ extension MCPServer {
             let to = arguments["to"] as? String else {
         throw MCPError.missingArgument("uuid or to")
       }
+      let repDbUUID = try devonthink.getRecordDatabaseUUID(uuid: uuid)
+      if ConfigManager.shared.isExcluded(repDbUUID) {
+        throw MCPError.databaseExcluded(repDbUUID)
+      }
       let tags = try devonthink.getRecordTags(uuid: uuid)
       try Privatizer.shared.checkWritePermission(uuid: uuid, tags: tags)
       let record = try devonthink.replicateRecord(uuid: uuid, to: to)
@@ -172,12 +223,19 @@ extension MCPServer {
       guard let uuid = arguments["uuid"] as? String else {
         throw MCPError.missingArgument("uuid")
       }
+      let childrenDbUUID = try devonthink.getRecordDatabaseUUID(uuid: uuid)
+      if ConfigManager.shared.isExcluded(childrenDbUUID) {
+        throw MCPError.databaseExcluded(childrenDbUUID)
+      }
       let children = try devonthink.getRecordChildren(uuid: uuid)
       return formatToolResult(children)
 
     case "get_tags":
       guard let database = arguments["database"] as? String else {
         throw MCPError.missingArgument("database")
+      }
+      if ConfigManager.shared.isExcluded(database) {
+        throw MCPError.databaseExcluded(database)
       }
       let tags = try devonthink.getTags(databaseUUID: database)
       return formatToolResult(tags)
@@ -186,6 +244,10 @@ extension MCPServer {
       guard let uuid = arguments["uuid"] as? String,
             let newTags = arguments["tags"] as? [String] else {
         throw MCPError.missingArgument("uuid or tags")
+      }
+      let setTagsDbUUID = try devonthink.getRecordDatabaseUUID(uuid: uuid)
+      if ConfigManager.shared.isExcluded(setTagsDbUUID) {
+        throw MCPError.databaseExcluded(setTagsDbUUID)
       }
       let currentTags = try devonthink.getRecordTags(uuid: uuid)
       try Privatizer.shared.checkWritePermission(uuid: uuid, tags: currentTags)
@@ -197,6 +259,10 @@ extension MCPServer {
             let newTags = arguments["tags"] as? [String] else {
         throw MCPError.missingArgument("uuid or tags")
       }
+      let addTagsDbUUID = try devonthink.getRecordDatabaseUUID(uuid: uuid)
+      if ConfigManager.shared.isExcluded(addTagsDbUUID) {
+        throw MCPError.databaseExcluded(addTagsDbUUID)
+      }
       let currentTags = try devonthink.getRecordTags(uuid: uuid)
       try Privatizer.shared.checkWritePermission(uuid: uuid, tags: currentTags)
       let success = try devonthink.addRecordTags(uuid: uuid, tags: newTags)
@@ -207,6 +273,10 @@ extension MCPServer {
             let tagsToRemove = arguments["tags"] as? [String] else {
         throw MCPError.missingArgument("uuid or tags")
       }
+      let removeTagsDbUUID = try devonthink.getRecordDatabaseUUID(uuid: uuid)
+      if ConfigManager.shared.isExcluded(removeTagsDbUUID) {
+        throw MCPError.databaseExcluded(removeTagsDbUUID)
+      }
       let currentTags = try devonthink.getRecordTags(uuid: uuid)
       try Privatizer.shared.checkWritePermission(uuid: uuid, tags: currentTags)
       let success = try devonthink.removeRecordTags(uuid: uuid, tags: tagsToRemove)
@@ -216,6 +286,10 @@ extension MCPServer {
       guard let uuid = arguments["uuid"] as? String else {
         throw MCPError.missingArgument("uuid")
       }
+      let metaDbUUID = try devonthink.getRecordDatabaseUUID(uuid: uuid)
+      if ConfigManager.shared.isExcluded(metaDbUUID) {
+        throw MCPError.databaseExcluded(metaDbUUID)
+      }
       let metadata = try devonthink.getCustomMetadata(uuid: uuid)
       return formatToolResult(metadata)
 
@@ -224,6 +298,10 @@ extension MCPServer {
             let key = arguments["key"] as? String,
             let value = arguments["value"] as? String else {
         throw MCPError.missingArgument("uuid, key, or value")
+      }
+      let setMetaDbUUID = try devonthink.getRecordDatabaseUUID(uuid: uuid)
+      if ConfigManager.shared.isExcluded(setMetaDbUUID) {
+        throw MCPError.databaseExcluded(setMetaDbUUID)
       }
       let tags = try devonthink.getRecordTags(uuid: uuid)
       try Privatizer.shared.checkWritePermission(uuid: uuid, tags: tags)
@@ -235,6 +313,9 @@ extension MCPServer {
             let database = arguments["database"] as? String else {
         throw MCPError.missingArgument("name or database")
       }
+      if ConfigManager.shared.isExcluded(database) {
+        throw MCPError.databaseExcluded(database)
+      }
       let parent = arguments["parent"] as? String
       let group = try devonthink.createGroup(name: name, databaseUUID: database, parentUUID: parent)
       return formatToolResult(group)
@@ -243,6 +324,9 @@ extension MCPServer {
       guard let database = arguments["database"] as? String else {
         throw MCPError.missingArgument("database")
       }
+      if ConfigManager.shared.isExcluded(database) {
+        throw MCPError.databaseExcluded(database)
+      }
       let items = try devonthink.getTrash(databaseUUID: database)
       return formatToolResult(items)
 
@@ -250,11 +334,21 @@ extension MCPServer {
       guard let database = arguments["database"] as? String else {
         throw MCPError.missingArgument("database")
       }
+      if ConfigManager.shared.isExcluded(database) {
+        throw MCPError.databaseExcluded(database)
+      }
       let success = try devonthink.emptyTrash(databaseUUID: database)
       return formatToolResult(["success": success])
 
     case "get_current_record":
       if let record = try devonthink.getCurrentRecord() {
+        // Check if current record is in excluded database
+        if let uuid = record["uuid"] as? String {
+          let currentDbUUID = try devonthink.getRecordDatabaseUUID(uuid: uuid)
+          if ConfigManager.shared.isExcluded(currentDbUUID) {
+            return formatToolResult(["message": "Current record is in an excluded database"])
+          }
+        }
         return formatToolResult(record)
       }
       else {
@@ -265,6 +359,10 @@ extension MCPServer {
       guard let uuid = arguments["uuid"] as? String else {
         throw MCPError.missingArgument("uuid")
       }
+      let annotDbUUID = try devonthink.getRecordDatabaseUUID(uuid: uuid)
+      if ConfigManager.shared.isExcluded(annotDbUUID) {
+        throw MCPError.databaseExcluded(annotDbUUID)
+      }
       let annotations = try devonthink.getAnnotations(uuid: uuid)
       return formatToolResult(annotations)
 
@@ -272,12 +370,20 @@ extension MCPServer {
       guard let uuid = arguments["uuid"] as? String else {
         throw MCPError.missingArgument("uuid")
       }
+      let repliDbUUID = try devonthink.getRecordDatabaseUUID(uuid: uuid)
+      if ConfigManager.shared.isExcluded(repliDbUUID) {
+        throw MCPError.databaseExcluded(repliDbUUID)
+      }
       let replicants = try devonthink.getReplicants(uuid: uuid)
       return formatToolResult(replicants)
 
     case "get_duplicates":
       guard let uuid = arguments["uuid"] as? String else {
         throw MCPError.missingArgument("uuid")
+      }
+      let dupsDbUUID = try devonthink.getRecordDatabaseUUID(uuid: uuid)
+      if ConfigManager.shared.isExcluded(dupsDbUUID) {
+        throw MCPError.databaseExcluded(dupsDbUUID)
       }
       let duplicates = try devonthink.getDuplicates(uuid: uuid)
       return formatToolResult(duplicates)

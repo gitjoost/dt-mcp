@@ -31,12 +31,14 @@ struct MCPConfig: Codable {
   var encryptionKey: String
   var phonePatterns: [String]
   var encodePhones: [String]
+  var excludedDatabases: [String]
 
   enum CodingKeys: String, CodingKey {
     case privacyMode = "privacy_mode"
     case encryptionKey = "encryption_key"
     case phonePatterns = "phone_patterns"
     case encodePhones = "encode_phones"
+    case excludedDatabases = "excluded_databases"
   }
 
   static let defaultPhonePatterns = [
@@ -50,12 +52,14 @@ struct MCPConfig: Codable {
     privacyMode: Bool = false,
     encryptionKey: String = "",
     phonePatterns: [String] = defaultPhonePatterns,
-    encodePhones: [String] = []
+    encodePhones: [String] = [],
+    excludedDatabases: [String] = []
   ) {
     self.privacyMode = privacyMode
     self.encryptionKey = encryptionKey
     self.phonePatterns = phonePatterns
     self.encodePhones = encodePhones
+    self.excludedDatabases = excludedDatabases
   }
 }
 
@@ -134,5 +138,27 @@ class ConfigManager {
 
   var encodePhones: [String] {
     config.encodePhones
+  }
+
+  // MARK: - Database Exclusion
+
+  var excludedDatabases: [String] {
+    config.excludedDatabases
+  }
+
+  func isExcluded(_ uuid: String) -> Bool {
+    config.excludedDatabases.contains(uuid)
+  }
+
+  func excludeDatabase(_ uuid: String) {
+    if !config.excludedDatabases.contains(uuid) {
+      config.excludedDatabases.append(uuid)
+      save()
+    }
+  }
+
+  func includeDatabase(_ uuid: String) {
+    config.excludedDatabases.removeAll { $0 == uuid }
+    save()
   }
 }

@@ -28,6 +28,19 @@ import Foundation
 
 extension DEVONthinkBridge {
 
+  func getRecordDatabaseUUID(uuid: String) throws -> String {
+    let script = """
+    tell application id "DNtp"
+      set theRecord to get record with uuid "\(escape(uuid))"
+      if theRecord is missing value then error "Record not found"
+      return uuid of database of theRecord
+    end tell
+    """
+
+    let result = try runAppleScript(script)
+    return result.stringValue ?? ""
+  }
+
   func getRecord(uuid: String) throws -> [String: Any] {
     let script = """
     tell application id "DNtp"

@@ -44,6 +44,9 @@ extension MCPServer {
             let database = arguments["database"] as? String else {
         throw MCPError.missingArgument("path or database")
       }
+      if ConfigManager.shared.isExcluded(database) {
+        throw MCPError.databaseExcluded(database)
+      }
       let destination = arguments["destination"] as? String
       let name = arguments["name"] as? String
       let record = try devonthink.importFile(path: path, to: database, destinationUUID: destination, name: name)
@@ -54,6 +57,10 @@ extension MCPServer {
             let path = arguments["path"] as? String else {
         throw MCPError.missingArgument("uuid or path")
       }
+      let exportDbUUID = try devonthink.getRecordDatabaseUUID(uuid: uuid)
+      if ConfigManager.shared.isExcluded(exportDbUUID) {
+        throw MCPError.databaseExcluded(exportDbUUID)
+      }
       let success = try devonthink.exportRecord(uuid: uuid, to: path)
       return formatToolResult(["success": success])
 
@@ -62,12 +69,20 @@ extension MCPServer {
       guard let uuid = arguments["uuid"] as? String else {
         throw MCPError.missingArgument("uuid")
       }
+      let classifyDbUUID = try devonthink.getRecordDatabaseUUID(uuid: uuid)
+      if ConfigManager.shared.isExcluded(classifyDbUUID) {
+        throw MCPError.databaseExcluded(classifyDbUUID)
+      }
       let suggestions = try devonthink.classify(uuid: uuid)
       return formatToolResult(suggestions)
 
     case "see_also":
       guard let uuid = arguments["uuid"] as? String else {
         throw MCPError.missingArgument("uuid")
+      }
+      let seeAlsoDbUUID = try devonthink.getRecordDatabaseUUID(uuid: uuid)
+      if ConfigManager.shared.isExcluded(seeAlsoDbUUID) {
+        throw MCPError.databaseExcluded(seeAlsoDbUUID)
       }
       let count = arguments["count"] as? Int
       let similar = try devonthink.seeAlso(uuid: uuid, count: count)
@@ -77,12 +92,20 @@ extension MCPServer {
       guard let uuid = arguments["uuid"] as? String else {
         throw MCPError.missingArgument("uuid")
       }
+      let summarizeDbUUID = try devonthink.getRecordDatabaseUUID(uuid: uuid)
+      if ConfigManager.shared.isExcluded(summarizeDbUUID) {
+        throw MCPError.databaseExcluded(summarizeDbUUID)
+      }
       let summary = try devonthink.summarize(uuid: uuid)
       return formatToolResult(["summary": summary])
 
     case "get_concordance":
       guard let uuid = arguments["uuid"] as? String else {
         throw MCPError.missingArgument("uuid")
+      }
+      let concordanceDbUUID = try devonthink.getRecordDatabaseUUID(uuid: uuid)
+      if ConfigManager.shared.isExcluded(concordanceDbUUID) {
+        throw MCPError.databaseExcluded(concordanceDbUUID)
       }
       let words = try devonthink.getConcordance(uuid: uuid)
       return formatToolResult(words)
@@ -93,6 +116,9 @@ extension MCPServer {
             let database = arguments["database"] as? String else {
         throw MCPError.missingArgument("path or database")
       }
+      if ConfigManager.shared.isExcluded(database) {
+        throw MCPError.databaseExcluded(database)
+      }
       let destination = arguments["destination"] as? String
       let record = try devonthink.ocrFile(path: path, databaseUUID: database, destinationUUID: destination)
       return formatToolResult(record)
@@ -100,6 +126,10 @@ extension MCPServer {
     case "convert_to_searchable_pdf":
       guard let uuid = arguments["uuid"] as? String else {
         throw MCPError.missingArgument("uuid")
+      }
+      let pdfDbUUID = try devonthink.getRecordDatabaseUUID(uuid: uuid)
+      if ConfigManager.shared.isExcluded(pdfDbUUID) {
+        throw MCPError.databaseExcluded(pdfDbUUID)
       }
       let success = try devonthink.convertToSearchablePDF(uuid: uuid)
       return formatToolResult(["success": success])
@@ -109,6 +139,9 @@ extension MCPServer {
       guard let url = arguments["url"] as? String,
             let database = arguments["database"] as? String else {
         throw MCPError.missingArgument("url or database")
+      }
+      if ConfigManager.shared.isExcluded(database) {
+        throw MCPError.databaseExcluded(database)
       }
       let name = arguments["name"] as? String
       let destination = arguments["destination"] as? String
@@ -120,6 +153,9 @@ extension MCPServer {
             let database = arguments["database"] as? String else {
         throw MCPError.missingArgument("url or database")
       }
+      if ConfigManager.shared.isExcluded(database) {
+        throw MCPError.databaseExcluded(database)
+      }
       let destination = arguments["destination"] as? String
       let record = try devonthink.downloadURL(url: url, databaseUUID: database, destinationUUID: destination)
       return formatToolResult(record)
@@ -128,6 +164,9 @@ extension MCPServer {
       guard let url = arguments["url"] as? String,
             let database = arguments["database"] as? String else {
         throw MCPError.missingArgument("url or database")
+      }
+      if ConfigManager.shared.isExcluded(database) {
+        throw MCPError.databaseExcluded(database)
       }
       let destination = arguments["destination"] as? String
       let record = try devonthink.downloadMarkdown(url: url, databaseUUID: database, destinationUUID: destination)
@@ -138,6 +177,10 @@ extension MCPServer {
       guard let uuid = arguments["uuid"] as? String else {
         throw MCPError.missingArgument("uuid")
       }
+      let inLinksDbUUID = try devonthink.getRecordDatabaseUUID(uuid: uuid)
+      if ConfigManager.shared.isExcluded(inLinksDbUUID) {
+        throw MCPError.databaseExcluded(inLinksDbUUID)
+      }
       let links = try devonthink.getItemLinks(uuid: uuid)
       return formatToolResult(links)
 
@@ -145,12 +188,20 @@ extension MCPServer {
       guard let uuid = arguments["uuid"] as? String else {
         throw MCPError.missingArgument("uuid")
       }
+      let outLinksDbUUID = try devonthink.getRecordDatabaseUUID(uuid: uuid)
+      if ConfigManager.shared.isExcluded(outLinksDbUUID) {
+        throw MCPError.databaseExcluded(outLinksDbUUID)
+      }
       let links = try devonthink.getOutgoingLinks(uuid: uuid)
       return formatToolResult(links)
 
     case "get_item_url":
       guard let uuid = arguments["uuid"] as? String else {
         throw MCPError.missingArgument("uuid")
+      }
+      let itemUrlDbUUID = try devonthink.getRecordDatabaseUUID(uuid: uuid)
+      if ConfigManager.shared.isExcluded(itemUrlDbUUID) {
+        throw MCPError.databaseExcluded(itemUrlDbUUID)
       }
       let url = try devonthink.getItemURL(uuid: uuid)
       return formatToolResult(["url": url])
@@ -164,17 +215,30 @@ extension MCPServer {
       guard let uuid = arguments["uuid"] as? String else {
         throw MCPError.missingArgument("uuid")
       }
+      let openDbUUID = try devonthink.getRecordDatabaseUUID(uuid: uuid)
+      if ConfigManager.shared.isExcluded(openDbUUID) {
+        throw MCPError.databaseExcluded(openDbUUID)
+      }
       let success = try devonthink.openRecordInWindow(uuid: uuid)
       return formatToolResult(["success": success])
 
     case "open_window":
       let database = arguments["database"] as? String
+      if let database = database, ConfigManager.shared.isExcluded(database) {
+        throw MCPError.databaseExcluded(database)
+      }
       let success = try devonthink.openNewWindow(databaseUUID: database)
       return formatToolResult(["success": success])
 
     // Reminders
     case "get_reminders":
       let uuid = arguments["uuid"] as? String
+      if let uuid = uuid {
+        let reminderDbUUID = try devonthink.getRecordDatabaseUUID(uuid: uuid)
+        if ConfigManager.shared.isExcluded(reminderDbUUID) {
+          throw MCPError.databaseExcluded(reminderDbUUID)
+        }
+      }
       let reminders = try devonthink.getReminders(uuid: uuid)
       return formatToolResult(reminders)
 
@@ -182,6 +246,10 @@ extension MCPServer {
       guard let uuid = arguments["uuid"] as? String,
             let date = arguments["date"] as? String else {
         throw MCPError.missingArgument("uuid or date")
+      }
+      let setRemDbUUID = try devonthink.getRecordDatabaseUUID(uuid: uuid)
+      if ConfigManager.shared.isExcluded(setRemDbUUID) {
+        throw MCPError.databaseExcluded(setRemDbUUID)
       }
       let tags = try devonthink.getRecordTags(uuid: uuid)
       try Privatizer.shared.checkWritePermission(uuid: uuid, tags: tags)
@@ -193,6 +261,10 @@ extension MCPServer {
       guard let uuid = arguments["uuid"] as? String else {
         throw MCPError.missingArgument("uuid")
       }
+      let clearRemDbUUID = try devonthink.getRecordDatabaseUUID(uuid: uuid)
+      if ConfigManager.shared.isExcluded(clearRemDbUUID) {
+        throw MCPError.databaseExcluded(clearRemDbUUID)
+      }
       let tags = try devonthink.getRecordTags(uuid: uuid)
       try Privatizer.shared.checkWritePermission(uuid: uuid, tags: tags)
       let success = try devonthink.clearReminder(uuid: uuid)
@@ -203,12 +275,19 @@ extension MCPServer {
       guard let database = arguments["database"] as? String else {
         throw MCPError.missingArgument("database")
       }
+      if ConfigManager.shared.isExcluded(database) {
+        throw MCPError.databaseExcluded(database)
+      }
       let groups = try devonthink.getSmartGroups(databaseUUID: database)
       return formatToolResult(groups)
 
     case "get_smart_group_contents":
       guard let uuid = arguments["uuid"] as? String else {
         throw MCPError.missingArgument("uuid")
+      }
+      let sgDbUUID = try devonthink.getRecordDatabaseUUID(uuid: uuid)
+      if ConfigManager.shared.isExcluded(sgDbUUID) {
+        throw MCPError.databaseExcluded(sgDbUUID)
       }
       let contents = try devonthink.getSmartGroupContents(uuid: uuid)
       return formatToolResult(contents)

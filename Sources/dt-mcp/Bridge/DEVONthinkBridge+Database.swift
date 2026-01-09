@@ -63,7 +63,7 @@ extension DEVONthinkBridge {
               set tagStr to tagStr & "||" & (t as string)
             end if
           end repeat
-          set end of resultList to {uuid of theRecord, name of theRecord, path of theRecord, location of theRecord, tagStr}
+          set end of resultList to {uuid of theRecord, name of theRecord, path of theRecord, location of theRecord, tagStr, uuid of database of theRecord}
           set counter to counter + 1
         end repeat
         return resultList
@@ -87,7 +87,7 @@ extension DEVONthinkBridge {
               set tagStr to tagStr & "||" & (t as string)
             end if
           end repeat
-          set end of resultList to {uuid of theRecord, name of theRecord, path of theRecord, location of theRecord, tagStr}
+          set end of resultList to {uuid of theRecord, name of theRecord, path of theRecord, location of theRecord, tagStr, uuid of database of theRecord}
           set counter to counter + 1
         end repeat
         return resultList
@@ -112,7 +112,8 @@ extension DEVONthinkBridge {
         "name": item.atIndex(2)?.stringValue ?? "",
         "path": item.atIndex(3)?.stringValue ?? "",
         "location": item.atIndex(4)?.stringValue ?? "",
-        "tags": tags
+        "tags": tags,
+        "databaseUUID": item.atIndex(6)?.stringValue ?? ""
       ])
     }
     return result

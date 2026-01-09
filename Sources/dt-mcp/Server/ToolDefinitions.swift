@@ -102,6 +102,37 @@ extension MCPServer {
           ] as [String: Any]),
           "required": AnyCodable(["uuid"])
         ]
+      ),
+      Tool(
+        name: "exclude_database",
+        description: "Exclude a database from MCP access. Excluded databases are hidden from list_databases and their records cannot be accessed.",
+        inputSchema: [
+          "type": AnyCodable("object"),
+          "properties": AnyCodable([
+            "uuid": ["type": "string", "description": "Database UUID to exclude"] as [String: Any]
+          ] as [String: Any]),
+          "required": AnyCodable(["uuid"])
+        ]
+      ),
+      Tool(
+        name: "include_database",
+        description: "Remove a database from the exclusion list, making it accessible via MCP again.",
+        inputSchema: [
+          "type": AnyCodable("object"),
+          "properties": AnyCodable([
+            "uuid": ["type": "string", "description": "Database UUID to include"] as [String: Any]
+          ] as [String: Any]),
+          "required": AnyCodable(["uuid"])
+        ]
+      ),
+      Tool(
+        name: "list_excluded_databases",
+        description: "List all databases currently excluded from MCP access.",
+        inputSchema: [
+          "type": AnyCodable("object"),
+          "properties": AnyCodable([:] as [String: Any]),
+          "required": AnyCodable([] as [String])
+        ]
       )
     ]
   }

@@ -30,18 +30,27 @@ extension MCPServer {
 
   static let databaseTools = [
     "list_databases", "get_database", "open_database",
-    "close_database", "verify_database", "optimize_database"
+    "close_database", "verify_database", "optimize_database",
+    "exclude_database", "include_database", "list_excluded_databases"
   ]
 
   func handleDatabaseTool(name: String, arguments: [String: Any]) throws -> [String: Any]? {
     switch name {
     case "list_databases":
       let databases = try devonthink.listDatabases()
-      return formatToolResult(databases)
+      let excluded = ConfigManager.shared.excludedDatabases
+      let filtered = databases.filter { db in
+        guard let uuid = db["uuid"] as? String else { return true }
+        return !excluded.contains(uuid)
+      }
+      return formatToolResult(filtered)
 
     case "get_database":
       guard let uuid = arguments["uuid"] as? String else {
         throw MCPError.missingArgument("uuid")
+      }
+      if ConfigManager.shared.isExcluded(uuid) {
+        throw MCPError.databaseExcluded(uuid)
       }
       let database = try devonthink.getDatabase(uuid: uuid)
       return formatToolResult(database)
@@ -73,6 +82,24 @@ extension MCPServer {
       }
       let success = try devonthink.optimizeDatabase(uuid: uuid)
       return formatToolResult(["success": success])
+
+    case "exclude_database":
+      guard let uuid = arguments["uuid"] as? String else {
+        throw MCPError.missingArgument("uuid")
+      }
+      ConfigManager.shared.excludeDatabase(uuid)
+      return formatToolResult(["success": true, "message": "Database excluded from MCP access"])
+
+    case "include_database":
+      guard let uuid = arguments["uuid"] as? String else {
+        throw MCPError.missingArgument("uuid")
+      }
+      ConfigManager.shared.includeDatabase(uuid)
+      return formatToolResult(["success": true, "message": "Database included in MCP access"])
+
+    case "list_excluded_databases":
+      let excluded = ConfigManager.shared.excludedDatabases
+      return formatToolResult(["excluded": excluded])
 
     default:
       return nil

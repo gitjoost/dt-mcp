@@ -33,6 +33,7 @@ enum MCPError: Error, LocalizedError {
   case appleScriptFailed
   case appleScriptError(String)
   case writeProtected(String)
+  case databaseExcluded(String)
 
   var errorDescription: String? {
     switch self {
@@ -48,6 +49,8 @@ enum MCPError: Error, LocalizedError {
       return "AppleScript error: \(msg)"
     case .writeProtected(let uuid):
       return "Record '\(uuid)' is PRIVATE and fully write-protected. All modifications are blocked including edits, moves, tag changes, and deletions. The PRIVATE tag cannot be removed via MCP."
+    case .databaseExcluded(let uuid):
+      return "Database '\(uuid)' is excluded and not accessible via MCP."
     }
   }
 }
